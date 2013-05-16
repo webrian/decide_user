@@ -46,11 +46,12 @@ class User(Base):
 
     def validate_password(self, password):
         """
-        Validates the password for repoze.who SQLAlchemy plugin
+        Validates the password for repoze.who SQLAlchemy plugin. The user must
+        be activated in order to success.
         """
 
         pw = hashlib.md5(password).hexdigest()
-        return self.password == pw
+        return (self.password == pw) and self.is_active
 
 class UserGroup(Base):
     __tablename__ = 'usergroups'
