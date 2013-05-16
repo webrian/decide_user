@@ -6,7 +6,7 @@
 __author__ = "Adrian Weber, Centre for Development and Environment, University of Bern"
 __date__ = "$May 16, 2013 1:24:16 PM$"
 
-from decide_usermodel.meta import Base
+from decide_user.model.meta import Base
 import hashlib
 from sqlalchemy import Boolean
 from sqlalchemy import CheckConstraint
