@@ -15,8 +15,39 @@ from sqlalchemy import DateTime
 from sqlalchemy import ForeignKey
 from sqlalchemy import Integer
 from sqlalchemy import String
+from sqlalchemy import Table
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
+
+group_roles = Table('group_roles', Base.metadata,
+                    Column('gid', Integer, primary_key=True),
+                    Column('fk_groups', Integer, ForeignKey('public.groups.id'), nullable=False),
+                    Column('fk_roles', Integer, ForeignKey('public.roles.gid'), nullable=False),
+                    schema='public'
+                    )
+                    
+group_members = Table('group_members', Base.metadata,
+                    Column('gid', Integer, primary_key=True),
+                    Column('fk_users', Integer, ForeignKey('public.users.id'), nullable=False),
+                    Column('fk_groups', Integer, ForeignKey('public.groups.id'), nullable=False),
+                    schema='public'
+                    )
+
+class UserGroup(Base):
+    __tablename__ = 'groups'
+    __table_args__ = {
+        "schema": 'public'
+    }
+    id = Column(Integer, primary_key=True)
+    name = Column(String(128))
+    description = Column(String(128))
+    mapviewer = Column(String)
+    decidegis = Column(String)
+    variables = Column(String)
+    metadata_column = Column('metadata', String)
+    is_enabled = Column(Boolean)
+    #users = relationship(User, backref="group", primaryjoin="User.fk_usergroup == UserGroup.id")
+    #users_requests = relationship(User, backref="requested_group", primaryjoin="User.fk_requested_usergroup == UserGroup.id")
 
 class User(Base):
     __tablename__ = 'users'
@@ -29,14 +60,14 @@ class User(Base):
     password = Column(String(128), nullable=False)
     firstname = Column(String(128), nullable=True)
     lastname = Column(String(128), nullable=True)
-    fk_usergroup = Column(Integer, ForeignKey('public.usergroups.id'), nullable=False)
     registration_timestamp = Column(DateTime(timezone=True), nullable=False)
     is_active = Column(Boolean, nullable=False, default=False)
     activation_uuid = Column(UUID, nullable=True)
     position = Column(String(128))
     organization = Column(String(512))
     purpose = Column(String(512))
-    fk_requested_usergroup = Column(Integer, ForeignKey('public.usergroups.id'), nullable=False)
+    fk_requested_usergroup = Column(Integer, ForeignKey('public.groups.id'), nullable=False)
+    groups = relationship(UserGroup, secondary=group_members, backref="users")
 
     def __repr__(self):
         return (
@@ -51,19 +82,15 @@ class User(Base):
         """
 
         pw = hashlib.md5(password).hexdigest()
-        return (self.password == pw) and self.is_active
+        return (self.password == "md5:%s" % pw) and self.is_active
 
-class UserGroup(Base):
-    __tablename__ = 'usergroups'
+class Role(Base):
+    __tablename__ = 'roles'
     __table_args__ = {
         "schema": 'public'
     }
-    id = Column(Integer, primary_key=True)
+    gid = Column(Integer, primary_key=True)
     name = Column(String(128))
-    description = Column(String(128))
-    mapviewer = Column(String)
-    decidegis = Column(String)
-    variables = Column(String)
-    metadata_column = Column('metadata', String)
-    users = relationship(User, backref="group", primaryjoin="User.fk_usergroup == UserGroup.id")
-    users_requests = relationship(User, backref="requested_group", primaryjoin="User.fk_requested_usergroup == UserGroup.id")
+    parent = Column(String(128))
+    description = Column(String(256))
+    groups = relationship(UserGroup, secondary=group_roles, backref="roles")
