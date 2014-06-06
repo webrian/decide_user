@@ -1,0 +1,1 @@
+Data manipulation XML and data definition XML for decide_user database model
