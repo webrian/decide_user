@@ -1,0 +1,15 @@
+<jdbcusergroupservice>
+  <id>50c43ae3:1463b6594ba:-7ffd</id>
+  <name>decide_user</name>
+  <className>org.geoserver.security.jdbc.JDBCUserGroupService</className>
+  <propertyFileNameDDL>decide_user_groups_ddl.xml</propertyFileNameDDL>
+  <propertyFileNameDML>decide_user_groups_dml.xml</propertyFileNameDML>
+  <jndi>false</jndi>
+  <driverClassName>org.postgresql.Driver</driverClassName>
+  <connectURL>jdbc:postgresql://localhost:5432/decide_user3</connectURL>
+  <userName>decide_user</userName>
+  <password>crypt2:4sHRELBjF90mGr+DeuSSvh3YCdf8xFrfS4BNo6zR2qM=</password>
+  <creatingTables>false</creatingTables>
+  <passwordEncoderName>md5PasswordEncoder</passwordEncoderName>
+  <passwordPolicyName>default</passwordPolicyName>
+</jdbcusergroupservice>

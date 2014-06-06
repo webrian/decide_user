@@ -1,0 +1,15 @@
+<jdbcroleservice>
+  <id>50c43ae3:1463b6594ba:-7ffb</id>
+  <name>decide_user</name>
+  <className>org.geoserver.security.jdbc.JDBCRoleService</className>
+  <propertyFileNameDDL>decide_user_roles_ddl.xml</propertyFileNameDDL>
+  <propertyFileNameDML>decide_user_roles_dml.xml</propertyFileNameDML>
+  <jndi>false</jndi>
+  <driverClassName>org.postgresql.Driver</driverClassName>
+  <connectURL>jdbc:postgresql://localhost:5432/decide_user3</connectURL>
+  <userName>decide_user</userName>
+  <password>crypt2:DG0cEfy8cuWPCnES3leemZt2t6qgchxX1V4JvrRU7Ns=</password>
+  <creatingTables>false</creatingTables>
+  <adminRoleName>ADMIN</adminRoleName>
+  <groupAdminRoleName>GROUP_ADMIN</groupAdminRoleName>
+</jdbcroleservice>

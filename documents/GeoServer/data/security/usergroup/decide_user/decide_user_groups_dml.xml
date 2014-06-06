@@ -1,0 +1,163 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE properties SYSTEM "http://java.sun.com/dtd/properties.dtd">
+<properties>
+  <comment>DML statements for user database</comment>
+
+  <entry key="users.count">
+	SELECT count(*) FROM users
+  </entry>
+
+  <entry key="users.all">
+	SELECT LOWER("email") AS "name", "password", CASE WHEN "is_active" THEN 'Y' ELSE 'N' END AS "enabled" FROM "users"
+  </entry>
+  <entry key="users.keyed">
+	SELECT "password", CASE WHEN "is_active" THEN 'Y' ELSE 'N' END AS "enabled" from "users" WHERE LOWER(email) = LOWER(?)
+  </entry>
+  <entry key="users.insert">
+	INSERT INTO users(email, password, is_active) values (?, ?, (SELECT CASE WHEN 'Y' = ? THEN TRUE ELSE FALSE END))
+  </entry>
+  <entry key="users.update">
+	UPDATE users SET password = ?, is_active = (SELECT CASE WHEN 'Y' = ? THEN TRUE ELSE FALSE END) where LOWER(email) = LOWER(?)
+  </entry>
+  <entry key="users.delete">
+	DELETE FROM users WHERE LOWER(email) = LOWER(?)
+  </entry>
+  
+  <entry key="users.deleteAll">
+	DELETE FROM users 
+  </entry>
+  
+
+  <entry key="userprops.all">
+	<!--select username,propname,propvalue from  user_props-->
+        SELECT email AS username, 'id' AS propname, id::CHARACTER VARYING AS propvalue FROM users
+        UNION SELECT email AS username, 'firstname' AS propname, firstname AS propvalue FROM users
+        UNION SELECT email AS username, 'lastname' AS propname, lastname AS propvalue FROM users
+        UNION SELECT email AS username, 'position' AS propname, "position" AS propvalue FROM users
+        UNION SELECT email AS username, 'organization' AS propname, organization AS propvalue FROM users
+	UNION SELECT email AS username, 'purpose' AS propname, CASE WHEN "purpose" IS NOT NULL THEN "purpose" ELSE 'n/a' END AS propvalue FROM users
+  </entry>
+  <entry key="userprops.selectForUser">
+	<!--select propname,propvalue from  user_props where username = ?-->
+	SELECT propname, propvalue FROM (
+		SELECT email, 'id' AS propname, id::CHARACTER VARYING AS propvalue FROM users
+		UNION SELECT email, 'firstname' AS propname, firstname AS propvalue FROM users
+		UNION SELECT email, 'lastname' AS propname, lastname AS propvalue FROM users
+		UNION SELECT email, 'position' AS propname, "position" AS propvalue FROM users
+		UNION SELECT email, 'organization' AS propname, organization AS propvalue FROM users
+		UNION SELECT email, 'purpose' AS propname, CASE WHEN "purpose" IS NOT NULL THEN "purpose" ELSE 'n/a' END AS propvalue FROM users) AS s
+	WHERE LOWER(email) = LOWER(?)
+  </entry>
+  <entry key="userprops.userPropsForGroup">
+	<!--select p.username,p.propname,propvalue from user_props p, group_members m where m.groupname= ? and m.username = p.username-->
+	<!--SELECT email, 'firstname', firstname FROM users JOIN group_members ON users.id = group_members.fk_users WHERE group_members.fk_groups = (SELECT id FROM groups WHERE name = ?)-->
+	SELECT username, propname, propvalue FROM (
+                SELECT id, LOWER(email) AS username, 'id' AS propname, id::CHARACTER VARYING AS propvalue FROM users
+                UNION SELECT id, LOWER(email) AS username, 'firstname' AS propname, firstname AS propvalue FROM users
+                UNION SELECT id, LOWER(email) AS username, 'lastname' AS propname, lastname AS propvalue FROM users
+                UNION SELECT id, LOWER(email) AS username, 'position' AS propname, "position" AS propvalue FROM users
+                UNION SELECT id, LOWER(email) AS username, 'organization' AS propname, organization AS propvalue FROM users
+                UNION SELECT id, LOWER(email) AS username, 'purpose' AS propname, CASE WHEN "purpose" IS NOT NULL THEN "purpose" ELSE 'n/a' END AS propvalue FROM users) AS sub
+	JOIN group_members ON sub.id = group_members.fk_users
+	WHERE group_members.fk_groups = (SELECT id FROM groups WHERE name = ?)
+  </entry>  
+  <entry key="userprops.deleteForUser">
+	<!--delete from user_props where username=?-->
+        SELECT ?
+  </entry>
+  <entry key="userprops.insert">
+	<!--insert into user_props(username,propname,propvalue) values (?,?,?)-->
+        SELECT ?, ?, ?
+  </entry>
+  <entry key="userprops.deleteAll">
+	<!--delete from user_props-->
+        SELECT TRUE
+  </entry>
+  
+    <!-- since GeoServer version 2.3.0 -->  
+  <entry key="user.usersHavingProperty">
+    <!--select u.name,u.password,u.enabled from users u ,user_props p where u.name=p.username and p.propname = ? -->
+    SELECT LOWER(email), password, CASE WHEN is_active THEN 'Y' ELSE 'N' END AS "enabled"
+  </entry>
+    <entry key="userprops.usersHavingProperty">
+    <!--select p.username,p.propname,p.propvalue from user_props p  where exists (select p1.username from user_props p1 where p.username=p1.username and p1.propname = ?) -->
+    SELECT LOWER(email) AS username, 'firstname' AS propname, firstname AS propvalue FROM users WHERE firstname IS NOT NULL
+  </entry> 
+  <entry key="userprops.userCountHavingProperty">
+    <!--select count(*) from user_props p where  p.propname = ? -->
+    SELECT 100
+  </entry>
+    
+  <entry key="user.usersNotHavingProperty">
+    select u.name,u.password,u.enabled from users u  where not exists (select p.username from user_props p where u.name=p.username and p.propname = ?) 
+  </entry>
+  <entry key="userprops.usersNotHavingProperty">
+    select p.username,p.propname,p.propvalue from user_props p  where not exists (select p1.username from user_props p1 where p.username=p1.username and p1.propname = ?) 
+  </entry>  
+  <entry key="userprops.userCountNotHavingProperty">
+    select count(*) from users u  where not exists (select p.username from user_props p where u.name=p.username and p.propname = ?) 
+  </entry>
+      
+   <entry key="user.usersHavingPropertyValue">
+    select u.name,u.password,u.enabled from users u ,user_props p where u.name=p.username and p.propname=? and p.propvalue=? 
+  </entry>
+  <entry key="userprops.usersHavingPropertyValue">
+    select p.username,p.propname,p.propvalue from user_props p  where exists (select p1.username from user_props p1 where p.username=p1.username and p1.propname = ? and p1.propvalue=?) 
+  </entry>    
+  <entry key="userprops.userCountHavingPropertyValue">
+    select count(*) from user_props p where  p.propname = ? and p.propvalue = ? 
+  </entry>      
+        
+  <!--  end GeoServer version 2.3.0 -->  
+  
+  
+  <entry key="groups.count">
+	SELECT count(*) FROM groups
+  </entry>
+  <entry key="groups.all">
+	SELECT "name", CASE WHEN "is_enabled" THEN 'Y' ELSE 'N' END AS "enabled" FROM "groups"
+  </entry>
+  <entry key="groups.keyed">
+	SELECT CASE WHEN is_enabled THEN 'Y' ELSE 'N' END AS "enabled" FROM groups WHERE name = ?
+  </entry>
+  <entry key="groups.insert">
+	INSERT INTO groups(name, is_enabled) values (?, (SELECT CASE WHEN 'Y' = ? THEN TRUE ELSE FALSE END))
+  </entry>
+  <entry key="groups.update">
+	<!--update groups set is_enabled = ? where name = ?-->
+	UPDATE groups SET is_enabled = (SELECT CASE WHEN 'Y' = ? THEN TRUE ELSE FALSE END) WHERE name = ?
+  </entry>
+  <entry key="groups.delete">
+	delete from groups where name = ?
+  </entry>
+  <entry key="groups.deleteAll">
+	DELETE FROM groups 
+  </entry>
+  
+  
+
+  <entry key="groupmembers.groupsForUser">
+	<!--select m.groupname,g.enabled from group_members m, groups g where m.username = ? and m.groupname=g.name-->
+	SELECT groups.name, CASE WHEN groups.is_enabled THEN 'Y' ELSE 'N' END FROM groups JOIN group_members ON groups.id = group_members.fk_groups AND group_members.fk_users = (SELECT id FROM users WHERE LOWER(email) = LOWER(?))
+  </entry>
+  <entry key="groupmembers.usersForGroup">
+	<!--select m.username,u.password,u.enabled from group_members m, users u where m.groupname = ? and m.username = u.name-->
+        SELECT email, password, CASE WHEN users.is_active THEN 'Y' ELSE 'N' END AS "enabled" FROM users JOIN group_members ON users.id = group_members.fk_users AND group_members.fk_groups = (SELECT id FROM groups WHERE name = ?)
+  </entry>
+  <entry key="groupmembers.insert">
+	INSERT INTO group_members(fk_groups, fk_users) values ((SELECT id FROM groups WHERE LOWER(name) = LOWER(?)), (SELECT id FROM users WHERE LOWER(email) = LOWER(?)))
+  </entry>
+  <entry key="groupmembers.delete">
+	DELETE FROM group_members WHERE fk_groups = (SELECT id FROM groups WHERE LOWER(name) = LOWER(?)) AND fk_users = (SELECT id FROM users WHERE LOWER(email) = LOWER(?))
+  </entry>
+  <entry key="groupmembers.deleteGroup">
+	DELETE FROM group_members WHERE fk_groups = (SELECT id FROM groups WHERE LOWER(name) = LOWER(?))
+  </entry>
+  <entry key="groupmembers.deleteUser">
+	DELETE FROM group_members where fk_users = (SELECT id FROM users WHERE LOWER(email) = LOWER(?))
+  </entry>
+  <entry key="groupmembers.deleteAll">
+	DELETE FROM group_members 
+  </entry>
+	  
+</properties>
