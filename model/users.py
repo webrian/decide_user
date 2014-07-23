@@ -32,6 +32,13 @@ group_members = Table('group_members', Base.metadata,
                     Column('fk_groups', Integer, ForeignKey('public.groups.id'), nullable=False),
                     schema='public'
                     )
+                    
+user_roles = Table('user_roles', Base.metadata,
+                    Column('gid', Integer, primary_key=True),
+                    Column('fk_users', Integer, ForeignKey('public.users.id'), nullable=False),
+                    Column('fk_roles', Integer, ForeignKey('public.roles.gid'), nullable=False),
+                    schema='public'
+                    )
 
 class UserGroup(Base):
     __tablename__ = 'groups'
@@ -48,6 +55,17 @@ class UserGroup(Base):
     is_enabled = Column(Boolean)
     #users = relationship(User, backref="group", primaryjoin="User.fk_usergroup == UserGroup.id")
     #users_requests = relationship(User, backref="requested_group", primaryjoin="User.fk_requested_usergroup == UserGroup.id")
+    
+class Role(Base):
+    __tablename__ = 'roles'
+    __table_args__ = {
+        "schema": 'public'
+    }
+    gid = Column(Integer, primary_key=True)
+    name = Column(String(128))
+    parent = Column(String(128))
+    description = Column(String(256))
+    groups = relationship(UserGroup, secondary=group_roles, backref="roles")
 
 class User(Base):
     __tablename__ = 'users'
@@ -68,6 +86,7 @@ class User(Base):
     purpose = Column(String(512))
     fk_requested_usergroup = Column(Integer, ForeignKey('public.groups.id'), nullable=False)
     groups = relationship(UserGroup, secondary=group_members, backref="users")
+    roles = relationship(Role, secondary=user_roles, backref="users")
 
     def __repr__(self):
         return (
@@ -84,13 +103,3 @@ class User(Base):
         pw = hashlib.md5(password).hexdigest()
         return (self.password == "md5:%s" % pw) and self.is_active
 
-class Role(Base):
-    __tablename__ = 'roles'
-    __table_args__ = {
-        "schema": 'public'
-    }
-    gid = Column(Integer, primary_key=True)
-    name = Column(String(128))
-    parent = Column(String(128))
-    description = Column(String(256))
-    groups = relationship(UserGroup, secondary=group_roles, backref="roles")
